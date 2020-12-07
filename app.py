@@ -2,7 +2,7 @@ import threading
 import queue
 from threading import Thread
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 from urllib.request import urlopen
@@ -61,8 +61,9 @@ def competitors():
 @app.route('/save-search', methods=['POST'])
 def save_search():
 	query = request.form['product']
-	products = save_related_products(query)
-	return render_template('related_products.html', query=query, products=products)
+	price = request.form['price']
+	search = save_related_products(query, price)
+	return redirect('related_products?search_id=' + str(search.id))
 
 @app.route('/related_products', methods=['GET'])
 def search_products():
@@ -71,7 +72,7 @@ def search_products():
 	return render_template('related_products.html', search=search)
 
 
-def save_related_products(query):
+def save_related_products(query, price):
 	search_url = 'https://www.trademe.co.nz/Browse/SearchResults.aspx?buy=buynow&v=List&searchString=' + query.replace(' ', '+')
 	page_soup = bs(urlopen(search_url).read(), 'html.parser')
 	total_count = page_soup.find(id="totalCount").text
@@ -83,12 +84,12 @@ def save_related_products(query):
 	for t in threads:
 		t.join()
 
-	search = Search(search=query, price=0)
+	search = Search(search=query, price=price)
 	search.tacked_products = list(result.queue)
 	db.session.add(search)
 	db.session.commit()
 
-	return search.tacked_products
+	return search
 
 def get_product_data(url, product, result):
 	page_content = bs(urlopen(url).read(), 'html.parser')
