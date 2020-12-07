@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div>
+  <table class="table">
+    <tr>
+      <th>Id</th>
+      <th>Search</th>
+      <th>Price</th>
+      <th>Number of products</th>
+      <th>Delete</th>
+      <th>Update</th>
+    </tr>
+    {% for product in products %}
+    <tr>
+      <td>{{product.id}}</td>
+      <td><a href="related_products?search_id={{product.id}}">{{product.search}}</a></td>
+      <td>{{product.price}}</td>
+      <td>{{product.tacked_products|length}}</td>
+      <td><button class="btn btn-primary">Update</button></td>
+      <td><button class="btn btn-danger">Delete</button></td>
+    </tr>
+  {% endfor %}
+  </table>
+  </div>
+{% endblock %}
+  

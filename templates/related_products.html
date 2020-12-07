@@ -2,6 +2,14 @@
 
 {% block content %}
 	<div>
+	<dl class="row">
+		<dt class="col-sm-3">Search term </dt>
+		<dd class="col-sm-9">{{search.search}}</dd>
+		<dt class="col-sm-3">Price</dt>
+		<dd class="col-sm-9"> {{search.price}} </dd>
+		<dd class="col-sm-9"><button class="btn btn-primary">Update all</button>  </dd>
+	</dl>
+
 	<table class="table">
 		<tr>
 			<th>Id</th>
@@ -9,14 +17,18 @@
 			<th>Product name</th>
 			<th>Price</th>
 			<th>Shipping</th>
+			<th>Update</th>
+			<th>Delete</th>
 		</tr>
-		{% for product in products %}
+		{% for product in search.tacked_products %}
 		<tr>
-			<td><a href="{{product.link}}"> {{product.id}} </a></td>
+			<td><a href="{{product.url}}"> {{product.product_id}} </a></td>
 		 	<td>{{product.seller}}</td>
-			<td>{{product.title}}</td>
+			<td>{{product.name}}</td>
 			<td>{{product.price}}</td>
 			<td>{{product.shipping}}</td>
+			<td><button class="btn btn-primary">Update</button></td>
+			<td><button class="btn btn-danger">Delete</button></td>
 		</tr>
 	{% endfor %}
 	</table>
