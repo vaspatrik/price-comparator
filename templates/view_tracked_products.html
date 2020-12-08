@@ -2,7 +2,7 @@
 
 {% block content %}
   <div>
-  <table class="table">
+  <table class="table summary_table">
     <tr>
       <th>Id</th>
       <th>Search</th>
@@ -13,13 +13,29 @@
     </tr>
     {% for product in products %}
     <tr>
-      <td>{{product.id}}</td>
-      <td><a href="related_products?search_id={{product.id}}">{{product.search}}</a></td>
-      <td>{{product.price}}</td>
-      <td>{{product.tacked_products|length}}</td>
-      <td><button class="btn btn-primary">Update</button></td>
-      <td><button class="btn btn-danger">Delete</button></td>
-    </tr>
+        <td>{{product.id}}</td>
+        <td><a href="related_products?search_id={{product.id}}">{{product.search}}</a></td>
+        <td>${{product.price}}</td>
+        <td>{{product.tacked_products|length}}</td>
+        <td><button class="btn btn-primary">Update</button></td>
+        <td><button class="btn btn-danger">Delete</button></td>
+      </tr>
+  <tr>
+  <td colspan="6">
+      <table class="table">
+       {% for preview in product.tacked_products[:3] %}
+        <tr>
+          <td></td>
+          <td>{{preview.seller}}</td>
+          <td>{{preview.name}}</td>
+          <td>${{preview.price}}</td>
+          <td>{{preview.shipping}}</td>
+        </tr>
+        {% endfor %}
+
+        </table>
+    </td>
+  </tr>
   {% endfor %}
   </table>
   </div>

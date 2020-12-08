@@ -1,3 +1,12 @@
 nav.navbar {
 	margin-bottom: 30px;	
 }
+
+table.summary_table td {
+	padding: 5px;
+	padding-bottom: 0px;
+}
+
+table.summary_table table td {
+	font-size: 12px;
+}
