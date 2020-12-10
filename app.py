@@ -17,22 +17,23 @@ class Competitor(db.Model):
 	username = db.Column(db.String(200), primary_key=True, nullable=False)
 	comment = db.Column(db.String(255))
 
-class Search(db.Model):
-	id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-	search = db.Column(db.String(200), nullable=False)
-	price = db.Column(db.Numeric(10,2))
-	tacked_products = db.relationship('TrackedProduct', backref='Seach', lazy=True)
-
-
-class TrackedProduct(db.Model):
+class Product(db.Model):
 	id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 	name = db.Column(db.String(200), nullable=False)
-	product_id = db.Column(db.String(200), nullable=False)
+	keywords = db.Column(db.String(200), nullable=False)
+	price = db.Column(db.Numeric(10,2))
+	tacked_items = db.relationship('TrackedItem', backref='product', lazy=True, order_by="TrackedItem.price")
+
+
+class TrackedItem(db.Model):
+	id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+	name = db.Column(db.String(200), nullable=False)
+	web_id = db.Column(db.String(200), nullable=False)
 	seller = db.Column(db.String(200), nullable=False)
 	url = db.Column(db.String(1200), nullable=False)
 	shipping = db.Column(db.String(1200), nullable=False)
 	price = db.Column(db.Numeric(10,2))
-	search_id = db.Column(db.Integer, db.ForeignKey('search.id'), nullable=False)
+	product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
 
 
 @app.route('/')
@@ -42,7 +43,7 @@ def index():
 
 @app.route('/view_tracked_products')
 def view_tracked_products():
-	trackedProducts = Search.query.all()
+	trackedProducts = Product.query.all()
 	return render_template('view_tracked_products.html', products=trackedProducts)
 
 
@@ -60,36 +61,56 @@ def competitors():
 
 @app.route('/save-search', methods=['POST'])
 def save_search():
-	query = request.form['product']
-	price = request.form['price']
-	search = save_related_products(query, price)
+	keywords = [s.strip() for s in request.form['keywords'].split(',')]
+	name = request.form['name']
+	price = request.form['price'] if request.form['price'] else 0 
+	search = save_related_products(name, keywords, price)
 	return redirect('related_products?search_id=' + str(search.id))
 
 @app.route('/related_products', methods=['GET'])
 def search_products():
 	sid = request.args.get('search_id')
-	search = Search.query.filter_by(id=sid).first()
-	return render_template('related_products.html', search=search)
+	search = Product.query.filter_by(id=sid).first()
+	return render_template('related_products.html', product=search)
 
 
-def save_related_products(query, price):
-	search_url = 'https://www.trademe.co.nz/Browse/SearchResults.aspx?buy=buynow&v=List&searchString=' + query.replace(' ', '+')
-	page_soup = bs(urlopen(search_url).read(), 'html.parser')
-	total_count = page_soup.find(id="totalCount").text
-	result = queue.Queue()
-	threads = [ getProcessProductItemThreads(item, result) for item in page_soup.find_all('div', attrs={'data-listingid' : True})]
-	
-	for t in threads:
-		t.start()
-	for t in threads:
-		t.join()
-
-	search = Search(search=query, price=price)
-	search.tacked_products = list(result.queue)
+def save_related_products(name, keywords, price):
+	result = get_all_related_products(keywords)
+	search = Product(name=name, keywords=', '.join(keywords), price=price)
+	search.tacked_items = result
 	db.session.add(search)
 	db.session.commit()
 
 	return search
+
+def get_unique_items(items):
+	res = []
+	ids = set()
+	while (not items.empty()):
+		prod = items.get()
+		if (prod.web_id not in ids):
+			res.append(prod)
+			ids.add(prod.web_id)
+	return res
+
+def get_all_related_products(keywords):
+	threads = []
+	result = queue.Queue()
+	for search_term in keywords:
+		search_url = 'https://www.trademe.co.nz/Browse/SearchResults.aspx?buy=buynow&v=List&searchString=' + search_term.replace(' ', '+')
+		page_soup = bs(urlopen(search_url).read(), 'html.parser')
+		count_span = page_soup.find(id="totalCount")
+		if (count_span):
+			total_count = count_span.text
+			for item in page_soup.find_all('div', attrs={'data-listingid' : True}):
+				t = getProcessProductItemThreads(item, result)
+				t.start()
+				threads.append(t)
+
+			for t in threads:
+				t.join()
+	return get_unique_items(result)
+	return result
 
 def get_product_data(url, product, result):
 	page_content = bs(urlopen(url).read(), 'html.parser')
@@ -104,8 +125,9 @@ def getProcessProductItemThreads(item, result):
 	id = item['data-listingid']
 	name = item.find('div', {'class': 'title'}).text.strip()
 	price = item.find('div', {'class': 'listingBuyNowPrice'}).text.strip()[1:]
+	price = price.split('-')[0]
 	url = 'https://www.trademe.co.nz/' + item.parent['href'].split('?')[0]
-	product = TrackedProduct(product_id=id, name=name, price=price, url=url)
+	product = TrackedItem(web_id=id, name=name, price=price, url=url)
 	return Thread(target=get_product_data, args = (url, product, result))
 
 if __name__ == '__main__':

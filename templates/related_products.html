@@ -3,10 +3,12 @@
 {% block content %}
 	<div>
 	<dl class="row">
-		<dt class="col-sm-3">Search term </dt>
-		<dd class="col-sm-9">{{search.search}}</dd>
+		<dt class="col-sm-3">Product name </dt>
+		<dd class="col-sm-9">{{product.name}}</dd>
+		<dt class="col-sm-3">Keywords </dt>
+		<dd class="col-sm-9">{{product.keywords}}</dd>
 		<dt class="col-sm-3">Price</dt>
-		<dd class="col-sm-9"> {{search.price}} </dd>
+		<dd class="col-sm-9"> {{product.price}} </dd>
 		<dd class="col-sm-9"><button class="btn btn-primary">Update all</button>  </dd>
 	</dl>
 
@@ -20,13 +22,13 @@
 			<th>Update</th>
 			<th>Delete</th>
 		</tr>
-		{% for product in search.tacked_products %}
+		{% for item in product.tacked_items %}
 		<tr>
-			<td><a href="{{product.url}}"> {{product.product_id}} </a></td>
-		 	<td>{{product.seller}}</td>
-			<td>{{product.name}}</td>
-			<td>{{product.price}}</td>
-			<td>{{product.shipping}}</td>
+			<td><a href="{{item.url}}"> {{item.web_id}} </a></td>
+		 	<td>{{item.seller}}</td>
+			<td>{{item.name}}</td>
+			<td>{{item.price}}</td>
+			<td>{{item.shipping}}</td>
 			<td><button class="btn btn-primary">Update</button></td>
 			<td><button class="btn btn-danger">Delete</button></td>
 		</tr>
