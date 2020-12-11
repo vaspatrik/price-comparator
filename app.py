@@ -97,7 +97,7 @@ def get_all_related_products(keywords):
 	threads = []
 	result = queue.Queue()
 	for search_term in keywords:
-		search_url = 'https://www.trademe.co.nz/Browse/SearchResults.aspx?buy=buynow&v=List&searchString=' + search_term.replace(' ', '+')
+		search_url = 'https://www.trademe.co.nz/Browse/SearchResults.aspx?buy=buynow&condition=new&v=List&searchString=' + search_term.replace(' ', '+')
 		page_soup = bs(urlopen(search_url).read(), 'html.parser')
 		count_span = page_soup.find(id="totalCount")
 		if (count_span):
@@ -110,13 +110,21 @@ def get_all_related_products(keywords):
 			for t in threads:
 				t.join()
 	return get_unique_items(result)
-	return result
 
 def get_product_data(url, product, result):
 	page_content = bs(urlopen(url).read(), 'html.parser')
-	seller = page_content.find('a', {'class': 'seller-name'}).text
-	shippingUL = page_content.find('ul', {'id': 'ShippingDetails_CustomShippingOptionList'})
-	shippingPrices = '/'.join([sp.text for sp in shippingUL.findAll('span', {'class': 'custom-shipping-price'})])
+	seller_tag = page_content.find('a', {'class': 'seller-name'})
+	shippingPrices = None
+	seller = None
+	if (seller_tag):
+		seller = seller_tag.text
+		shippingUL = page_content.find('ul', {'id': 'ShippingDetails_CustomShippingOptionList'})
+		shippingPrices = '/'.join([sp.text for sp in shippingUL.findAll('span', {'class': 'custom-shipping-price'})])
+	else:
+		seller = page_content.find('section', {'class': 'member-summary-box'}).find('h3').text
+		shippingTag = page_content.find('tm-listing-shipping-details')
+		shippingPrices = '/'.join([sp.text for sp in shippingTag.findAll('td', {'class': 'h-text-align-right'})])
+
 	product.seller =  seller
 	product.shipping = shippingPrices
 	result.put(product)
@@ -125,7 +133,7 @@ def getProcessProductItemThreads(item, result):
 	id = item['data-listingid']
 	name = item.find('div', {'class': 'title'}).text.strip()
 	price = item.find('div', {'class': 'listingBuyNowPrice'}).text.strip()[1:]
-	price = price.split('-')[0]
+	price = price.split('-')[0].replace(',','')
 	url = 'https://www.trademe.co.nz/' + item.parent['href'].split('?')[0]
 	product = TrackedItem(web_id=id, name=name, price=price, url=url)
 	return Thread(target=get_product_data, args = (url, product, result))
