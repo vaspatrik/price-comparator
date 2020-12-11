@@ -9,7 +9,12 @@
 		<dd class="col-sm-9">{{product.keywords}}</dd>
 		<dt class="col-sm-3">Price</dt>
 		<dd class="col-sm-9"> {{product.price}} </dd>
-		<dd class="col-sm-9"><button class="btn btn-primary">Update all</button>  </dd>
+		<dd class="col-sm-9">
+			<button class="btn btn-primary">Select all</button>
+			<button class="btn btn-primary">Update selected</button>
+			<button class="btn btn-primary">Export selected</button> 
+			<button class="btn btn-danger">Delete selected</button> 
+		</dd>
 	</dl>
 
 	<table class="table">
@@ -19,6 +24,7 @@
 			<th>Product name</th>
 			<th>Price</th>
 			<th>Shipping</th>
+			<th>Select</th>
 			<th>Update</th>
 			<th>Delete</th>
 		</tr>
@@ -29,8 +35,10 @@
 			<td>{{item.name}}</td>
 			<td>{{item.price}}</td>
 			<td>{{item.shipping}}</td>
+			<td><input type="checkbox"/></td>
 			<td><button class="btn btn-primary">Update</button></td>
 			<td><button class="btn btn-danger">Delete</button></td>
+
 		</tr>
 	{% endfor %}
 	</table>

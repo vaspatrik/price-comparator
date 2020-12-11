@@ -2,12 +2,21 @@
 
 {% block content %}
   <div>
+  <dl class="row">
+    <dd class="col-sm-9">
+      <button class="btn btn-primary">Select all</button>
+      <button class="btn btn-primary">Update selected</button>
+      <button class="btn btn-primary">Export selected</button> 
+      <button class="btn btn-danger">Delete selected</button> 
+    </dd>
+  </dl>
   <table class="table summary_table">
     <tr>
       <th>Id</th>
       <th>Name</th>
       <th>Keywords</th>
       <th>Price</th>
+      <th>Select</th>
       <th>Delete</th>
       <th>Update</th>
     </tr>
@@ -17,6 +26,7 @@
         <td><a href="related_products?search_id={{product.id}}">{{product.name}}</a></td>
         <td>{{product.keywords}}</td>
         <td>${{product.price}}</td>
+        <td><input type="checkbox"></td>
         <td><button class="btn btn-primary">Update</button></td>
         <td><button class="btn btn-danger">Delete</button></td>
       </tr>
